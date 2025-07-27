@@ -1,3 +1,4 @@
 ### README ###
 If you  want to use the class Text you have to add the textures for it.
 Everything else is, I think, very self explaining. You get an usage example in Main.java
+Make always sure you use the Shape Class provided by this GUI inside of its classes.
