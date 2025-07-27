@@ -17,48 +17,6 @@ public class ImageRegister {
     // Enum für typsichere Bildpfade
     public enum ImagePath {
         TEST("/test.png"),
-        HABERMEISTER("/textures/humans/habermeister.png"),
-        ALICE("/textures/humans/alice.png"),
-        STEFAN("/textures/humans/stefan.png"),
-        SIGHTFIELD("/textures/humans/sightfield.png"),
-        MENU_BACKGROUND("/textures/menu/main_menu_display/background1.png"),
-        SLIDER_KNOB("/textures/menu/slider_knob.png"),
-        SLIDER_TRACK("/textures/menu/slider_track.png"),
-        DROPDOWN_ENTRY("/textures/menu/dropdown_entry.png"),
-        DROPDOWN_MAIN("/textures/menu/dropdown_main.png"),
-        SETTINGS_BUTTON_0("/textures/menu/main_menu_display/settings_button_0.png"),
-        SETTINGS_BUTTON_1("/textures/menu/main_menu_display/settings_button_1.png"),
-        START_BUTTON_0("/textures/menu/main_menu_display/start_button_0.png"),
-        START_BUTTON_1("/textures/menu/main_menu_display/start_button_1.png"),
-        BACK_BUTTON("/textures/menu/settings_display/back_button.png"),
-        SETTINGS_BACKGROUND("/textures/menu/settings_display/background.png"),
-        CONTROLS_BUTTON("/textures/menu/settings_display/controls_button.png"),
-        MUSIC_VOLUME("/textures/menu/settings_display/music_volume.png"),
-        SOUND_EFFECT_VOLUME("/textures/menu/settings_display/sound_effect_volume.png"),
-        PARTICLE_SMELL("/textures/particles/smell.png"),
-        PARTICLE_SMOKE("/textures/particles/smoke.png"),
-        PARTICLE_ATTANTION_MARK("/textures/particles/attantion_mark.png"),
-        ITEM_BOX("/textures/items/item_box.png"),
-        ENERGY("/textures/items/energy.png"),
-        PAPE1("/textures/items/pape1.png"),
-        GUM_PAPER("/textures/items/gum_paper.png"),
-        GUM("/textures/items/gum.png"),
-        BOOK("/textures/items/book.png"),
-        ALPHABET("/textures/generell/alphabet.png"),
-        ALPHABET2("/textures/generell/alphabet2.png"),
-        NINA_AMARSCH("/textures/players/nina_amarsch.png"),
-        NINA_AMARSCH_SKAL("/textures/players/nina_amarsch_skal.png"),
-        FLOOR("/textures/mapElements/floor.png"),
-        FLOOR_WOOD("/textures/mapElements/floor_wood.png"),
-        FLOOR_SCIENCE("/textures/mapElements/floor_science.png"),
-        FLOOR_HALL("/textures/mapElements/floor_hall.png"),
-        GRASS("/textures/mapElements/grass.png"),
-        WALL("/textures/mapElements/wall.png"),
-        STAIR("/textures/mapElements/stair.png"),
-        DOOR_CLOSED("/textures/mapElements/door_closed.png"),
-        DOOR_OPEN("/textures/mapElements/door_open.png"),
-        PLAYGROUND("/textures/mapElements/playground.png"),
-        EMPTY("/textures/empty.png"),
         
         // Alphabet letters - uppercase
         LETTER_A("/textures/generell/alphabet_letters/big/A.png"),
@@ -129,24 +87,25 @@ public class ImageRegister {
         NUMBER_9("/textures/generell/alphabet_letters/numbers/9.png"),
         
         // Special characters
-        SPECIAL_EXCLAMATION("/textures/generell/alphabet_letters/special/!.png"),
-        SPECIAL_DOLLAR("/textures/generell/alphabet_letters/special/$.png"),
-        SPECIAL_PERCENT("/textures/generell/alphabet_letters/special/%.png"),
-        SPECIAL_AMPERSAND("/textures/generell/alphabet_letters/special/&.png"),
-        SPECIAL_PARENTHESIS_OPEN("/textures/generell/alphabet_letters/special/(.png"),
-        SPECIAL_PARENTHESIS_CLOSE("/textures/generell/alphabet_letters/special/).png"),
-        SPECIAL_PLUS("/textures/generell/alphabet_letters/special/+.png"),
-        SPECIAL_MINUS("/textures/generell/alphabet_letters/special/-.png"),
-        SPECIAL_EQUALS("/textures/generell/alphabet_letters/special/=.png"),
-        SPECIAL_QUOTES("/textures/generell/alphabet_letters/special/anfuehrungszeichen.png"),
-        SPECIAL_COLON("/textures/generell/alphabet_letters/special/doppelpunkt.png"),
-        SPECIAL_QUESTION("/textures/generell/alphabet_letters/special/fragezeichen.png"),
-        SPECIAL_COMMA("/textures/generell/alphabet_letters/special/komma.png"),
-        SPECIAL_PERIOD("/textures/generell/alphabet_letters/special/punkt.png"),
-        SPECIAL_SLASH("/textures/generell/alphabet_letters/special/slash.png"),
-        SPECIAL_ASTERISK("/textures/generell/alphabet_letters/special/stern.png"),
-        SPECIAL_SEMICOLON("/textures/generell/alphabet_letters/special/strichpunkt.png"),
-        SPECIAL_EURO("/textures/generell/alphabet_letters/special/€.png");
+        SPECIAL_EXCLAMATION("/textures/general/alphabet_letters/special/!.png"),
+        SPECIAL_DOLLAR("/textures/general/alphabet_letters/special/$.png"),
+        SPECIAL_PERCENT("/textures/general/alphabet_letters/special/%.png"),
+        SPECIAL_AMPERSAND("/textures/general/alphabet_letters/special/&.png"),
+        SPECIAL_PARENTHESIS_OPEN("/textures/general/alphabet_letters/special/(.png"),
+        SPECIAL_PARENTHESIS_CLOSE("/textures/general/alphabet_letters/special/).png"),
+        SPECIAL_PLUS("/textures/general/alphabet_letters/special/+.png"),
+        SPECIAL_MINUS("/textures/general/alphabet_letters/special/-.png"),
+        SPECIAL_EQUALS("/textures/general/alphabet_letters/special/=.png"),
+        SPECIAL_QUOTES("/textures/general/alphabet_letters/special/quotation_marks.png"),
+        SPECIAL_COLON("/textures/general/alphabet_letters/special/colon.png"),
+        SPECIAL_QUESTION("/textures/general/alphabet_letters/special/question_mark.png"),
+        SPECIAL_COMMA("/textures/general/alphabet_letters/special/comma.png"),
+        SPECIAL_PERIOD("/textures/general/alphabet_letters/special/period.png"),
+        SPECIAL_SLASH("/textures/general/alphabet_letters/special/slash.png"),
+        SPECIAL_ASTERISK("/textures/general/alphabet_letters/special/asterisk.png"),
+        SPECIAL_SEMICOLON("/textures/general/alphabet_letters/special/semicolon.png"),
+        SPECIAL_EURO("/textures/general/alphabet_letters/special/€.png");
+
 
         private final String path;
 
@@ -179,7 +138,7 @@ public class ImageRegister {
     }
 
     private static void initializeFallbackImage() {
-        try (InputStream stream = ImageRegister.class.getResourceAsStream(ImagePath.EMPTY.getPath())) {
+        try (InputStream stream = ImageRegister.class.getResourceAsStream(ImagePath.TEST.getPath())) {
             if (stream != null) {
                 fallbackImage = ImageIO.read(stream);
             }

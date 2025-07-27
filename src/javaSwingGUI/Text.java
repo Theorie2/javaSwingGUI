@@ -1,6 +1,5 @@
 package javaSwingGUI;
 
-import java.awt.Shape;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;

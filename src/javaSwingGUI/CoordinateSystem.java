@@ -1,8 +1,5 @@
 package javaSwingGUI;
 
-import gameElements.out_of_classroom.entities.gamelogic.Cords;
-import gameElements.out_of_classroom.io.Vector2D;
-
 public class CoordinateSystem {
     private double cameraX;
     private double cameraY;
