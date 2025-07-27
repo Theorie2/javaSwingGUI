@@ -1,11 +1,14 @@
 package javaSwingGUI;
 
+import java.awt.Shape;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class Actor{
-    private World world;
+    protected World world;
     private boolean destroyed;
     protected boolean mirroredX;
     protected boolean mirroredY;
@@ -37,6 +40,7 @@ public abstract class Actor{
 
     public void destroy(){
         destroyed = true;
+        world.removeShape(this);
     }
 
     public boolean isDestroyed(){
@@ -45,69 +49,57 @@ public abstract class Actor{
 
 
     public void bringToFront(){
-
+        world.bringToFront(this);
     }
 
     public static class KeyHandler implements KeyListener {
-        private int[] keysPressed;
-        public KeyHandler(){
-            keysPressed = new int[10];
+        private final Set<Integer> pressedKeys;
+
+        public KeyHandler() {
+            this(10);
         }
-        public KeyHandler(int maxKeysAtTheSameTime){
-            keysPressed = new int[maxKeysAtTheSameTime];
+
+        public KeyHandler(int maxKeysAtTheSameTime) {
+            // HashSet für O(1) Lookup-Performance
+            pressedKeys = new HashSet<>(maxKeysAtTheSameTime);
         }
-        public boolean isKeyPressed(int keyCode){
-            for (int e: keysPressed){
-                if (e == keyCode) {
-                    return true;
-                }
-            }
-            return false;
+
+        public boolean isKeyPressed(int keyCode) {
+            return pressedKeys.contains(keyCode);
         }
 
         @Override
         public void keyTyped(KeyEvent e) {
-
         }
 
         @Override
         public void keyPressed(KeyEvent e) {
-            for (int i = 0; i < keysPressed.length; i++) {
-                if (keysPressed[i] == 0 && !isKeySaved(e)) {
-                    keysPressed[i] = e.getKeyCode();
-                }
-            }
+            pressedKeys.add(e.getKeyCode());
         }
 
         @Override
         public void keyReleased(KeyEvent e) {
-            int code = e.getKeyCode();
-            for (int i = 0; i < keysPressed.length; i++){
-                if (code == keysPressed[i]){
-                    keysPressed[i] = 0;
-                    break;
-                }
-            }
-        }
-        private boolean isKeySaved(KeyEvent keyEvent){
-            for (int e: keysPressed){
-                if (keyEvent.getKeyCode() == e){
-                    return true;
-                }
-            }
-            return false;
+            pressedKeys.remove(e.getKeyCode());
         }
     }
+
+    /**
+     * Method to overwrite and put game-code in; Normally called 40 times per second
+     */
     public void act(){
 
     }
 
+    /**
+     *Used for the paint loop
+     */
+    @World.UseWithCaution
     public void draw(Graphics2D g2){
-        if (this.isActing()) {
-            act();
-        }
+        //if (this.isActing()) {
+        //    act();
+        //}
     }
-    public void move(int dx,int dy){
+    public void move(double dx,double dy){
 
     }
 

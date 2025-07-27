@@ -1,6 +1,8 @@
 package javaSwingGUI;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalTime;
 import java.util.Scanner;
 
@@ -14,7 +16,7 @@ public class LOGGER {
             logFile.getParentFile().mkdirs();
             if (!logFile.exists()) {
                 logFile.createNewFile();
-                LOGGER.log("File created: " + logFile.getName());
+               // LOGGER.log("File created: " + logFile.getName());
             } else {
                 Scanner myReader = new Scanner(logFile);
                 StringBuilder oldLog = new StringBuilder();

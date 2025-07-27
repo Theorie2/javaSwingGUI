@@ -1,8 +1,3 @@
-import javaSwingGUI.LOGGER;
-import javaSwingGUI.Sprite;
-import javaSwingGUI.World;
-
-
 public class Main {
    public static void main(String ...args){
        LOGGER.load("C:\\Users\\Toran\\IdeaProjects\\systemLib\\res\\logs\\log.txt");

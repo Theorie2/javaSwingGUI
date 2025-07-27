@@ -1,15 +1,20 @@
 package javaSwingGUI;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 
 
 public class Sprite extends Shape {
-    private World world;
     private BufferedImage image;
     private Graphics2D g2;
     private String imagePath;
-    public Sprite(BufferedImage image, int x, int y, World world){
+    protected float alpha = 1.0f;
+
+
+    public Sprite(BufferedImage image, double x, double y, World world) {
         super(world);
         this.image = image;
         initSprite();
@@ -18,7 +23,7 @@ public class Sprite extends Shape {
         this.world = world;
     }
 
-    public Sprite(String imagePath, int x, int y, World world){
+    public Sprite(String imagePath, double x, double y, World world) {
         super(world);
         this.image = ImageRegister.getImage(imagePath);
 
@@ -28,39 +33,66 @@ public class Sprite extends Shape {
         this.world = world;
     }
 
-    private void initSprite(){
+    private void initSprite() {
         width = image.getWidth();
         height = image.getHeight();
         resetCenter();
     }
 
-    private void tick(){
+    // Only cache alpha composite for performance
+    private AlphaComposite cachedComposite = null;
+    private float lastAlpha = -1.0f;
+    
+    private void tick() {
+        if (isVisible() && !isDestroyed() && !isOutsideView()) {
+            AffineTransform oldTransform = g2.getTransform();
+            Composite oldComposite = g2.getComposite();
 
-        if (isVisible()&&!isDestroyed()&&!isOutsideView()){
-            resetCenter();
-            g2.rotate(getAngleInRadians(),getCenterX(),getCenterY());
+            // Always create fresh transform to avoid position bugs
+            AffineTransform transform = new AffineTransform(oldTransform);
+            transform.rotate(getAngleInRadians(), getCenterX(), getCenterY());
+            g2.setTransform(transform);
 
-            g2.drawImage(image,x-(mirroredX ? -width : width),y-(mirroredY ? -height : height),
-                    (int)((mirroredX ? -width : width)*getScale()),(int)((mirroredY ? -height : height) *getScale()),
-                    null);
+            // Only cache composite if alpha changed
+            if (Math.abs(alpha - lastAlpha) > 0.001) {
+                cachedComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
+                lastAlpha = alpha;
+            }
+            g2.setComposite(cachedComposite);
 
-            g2.rotate(-getAngleInRadians(),getCenterX(),getCenterY());
+            g2.drawImage(
+                    image,
+                    (int) Math.round(x),
+                    (int) Math.round(y),
+                    (int) (width * getScaleX()),
+                    (int) (height * getScaleY()),
+                    null
+            );
+
+            // Reset Grafik-Kontext
+            g2.setTransform(oldTransform);
+            g2.setComposite(oldComposite);
         }
-        if (!isDestroyed()){
-        act();
-        }
+    }
+
+    public void setAlpha(float alpha) {
+        this.alpha = Math.max(0.0f, Math.min(1.0f, alpha)); // clamp between 0 and 1
+    }
+
+    public float getAlpha() {
+        return alpha;
     }
 
 
     @Override
     public void draw(Graphics2D g2) {
-        if (isVisible()){
-        this.g2 = g2;
+        if (isVisible()) {
+            this.g2 = g2;
         }
         tick();
     }
 
-    public String toString(){
+    public String toString() {
         return getClass().getName();
     }
 
@@ -72,7 +104,7 @@ public class Sprite extends Shape {
 
     @Override
     public void resetCenter() {
-        defineCenter(x+ (int)((image.getWidth()/2.0)*getScale()),y+(int)((image.getHeight()/2)*getScale()));
+        defineCenter(x + (image.getWidth() / 2.0) * getScaleX(), y + (image.getHeight() / 2.0) * getScaleY());
     }
 
     @Override
@@ -80,142 +112,155 @@ public class Sprite extends Shape {
         return image == null;
     }
 
-    public void setImage(BufferedImage image){
+    public void setImage(BufferedImage image) {
         this.image = image;
-        height = this.image.getHeight();
-        width = this.image.getWidth();
+        if (mirroredX) {
+            height = -this.image.getHeight();
+            width = -this.image.getWidth();
+        } else {
+            height = this.image.getHeight();
+            width = this.image.getWidth();
+        }
     }
 
-    //Not working yet with mirrorY() but with mirrorX()
-    public boolean collidesWith(Sprite object) {
+    public void setImage(String imagePath) {
+        this.image = ImageRegister.getImage(imagePath);
+        if (mirroredX) {
+            height = -this.image.getHeight();
+            width = -this.image.getWidth();
+        } else {
+            height = this.image.getHeight();
+            width = this.image.getWidth();
+        }
+    }
 
-        if (new Rectangle(x,y,(int)(width*getScale()),(int)(height*getScale()))
-                .intersects(new Rectangle(object.x,object.y,(int)(object.width * object.getScale()),
-                        (int)(object.height * object.getScale())))){
+    public double getX() {
+        return x;
+    }
 
-            //making the first mask to compare that one with the other one
-            long[][][] maskThis = new long[(int)(width * getScale())][(int)(height*getScale())][3];
-            if (!mirroredX) {
-                if (!mirroredY) {
-                    for (int widthThis = 0; widthThis < (int)(this.width * getScale()); widthThis++) {
-                        for (int heightThis = 0; heightThis < (int)(this.height * getScale()); heightThis++) {
+    public double getY() {
+        return y;
+    }
 
-                            maskThis[widthThis][heightThis][0] =
-                                    image.getRGB((int) (widthThis / this.getScale()), (int) (heightThis / this.getScale())) != 0 ? 1 : 0;
-                            maskThis[widthThis][heightThis][1] = widthThis + 1 + x;
-                            maskThis[widthThis][heightThis][2] = heightThis + 1 + y;
-                        }
-                    }
-                } else {
-                    for (int widthThis = 0; widthThis < (int)(this.width * getScale()); widthThis++) {
-                        for (int heightThis = 0; heightThis < (int)(this.height * getScale()); heightThis++) {
-
-                            maskThis[widthThis][heightThis][0] =
-                                    image.getRGB((int) (widthThis / this.getScale()), (int) (heightThis / this.getScale())) != 0 ? 1 : 0;
-                            maskThis[widthThis][heightThis][1] = widthThis + 1 + x;
-                            maskThis[widthThis][heightThis][2] = (int)(this.height*getScale()) - heightThis + 1 + this.y;
-                        }
-                    }
-                }
-
-            } else{
-                if (!mirroredY){
-                    for (int widthThis = 0; widthThis < (int)(this.width * this.getScale()); widthThis++){
-                        for (int heightThis = 0; heightThis < (int)(this.height * this.getScale()); heightThis++){
-
-                            maskThis[widthThis][heightThis][0] =
-                                    image.getRGB((int)(widthThis/this.getScale()),(int)(heightThis/this.getScale())) != 0 ? 1 : 0;
-                            maskThis[widthThis][heightThis][1] = (int)(this.width*getScale()) - widthThis + 1 + this.x;
-                            maskThis[widthThis][heightThis][2] = heightThis + 1 + this.y;
-                        }
-                    }
-                } else {
-                    for (int widthThis = 0; widthThis < (int)(this.width * getScale()); widthThis++) {
-                        for (int heightThis = 0; heightThis < (int)(this.height * getScale()); heightThis++) {
-
-                            maskThis[widthThis][heightThis][0] =
-                                    image.getRGB((int) (widthThis / this.getScale()), (int) (heightThis / this.getScale())) != 0 ? 1 : 0;
-                            maskThis[widthThis][heightThis][1] = (int)(this.width*getScale()) - widthThis + 1 + this.x;
-                            maskThis[widthThis][heightThis][2] = (int)(this.height*getScale()) - heightThis + 1 + this.y;
-                        }
-                    }
-                }
-            }
-
-            //making the second mask to compare that one with the other one
-            long[][][] maskObject = new long[(int)(object.width* object.getScale())][(int)(object.height* object.getScale())][3];
-            if (!object.mirroredX){
-                if (!object.mirroredY) {
-                    for (int widthThis = 0; widthThis < (int)(object.width * object.getScale()); widthThis++) {
-                        for (int heightThis = 0; heightThis < (int)(object.height * object.getScale()); heightThis++) {
-
-                            maskObject[widthThis][heightThis][0] =
-                                    object.getImage().getRGB((int) (widthThis / object.getScale()), (int) (heightThis / object.getScale())) != 0 ? 1 : 0;
-                            maskObject[widthThis][heightThis][1] = widthThis + 1 + object.x;
-                            maskObject[widthThis][heightThis][2] = heightThis + 1 + object.y;
-                        }
-                    }
-                } else{
-                    for (int widthThis = 0; widthThis < (int)(object.width * object.getScale()); widthThis++) {
-                        for (int heightThis = 0; heightThis < (int)(object.height * object.getScale()); heightThis++) {
-
-                            maskObject[widthThis][heightThis][0] =
-                                    object.getImage().getRGB((int) (widthThis / object.getScale()), (int) (heightThis / object.getScale())) != 0 ? 1 : 0;
-                            maskObject[widthThis][heightThis][1] = widthThis + 1 + object.x;
-                            maskObject[widthThis][heightThis][2] = (int)(object.height* object.getScale()) - heightThis+1+ object.y;
-                        }
-                    }
-                }
-            } else{
-                if (!object.mirroredY){
-
-                for (int widthThis = 0; widthThis < (int)(object.width * object.getScale()); widthThis++){
-                    for (int heightThis = 0; heightThis < (int)(object.height * object.getScale()); heightThis++){
-                        maskObject[widthThis][heightThis][0] =
-                                object.getImage().getRGB((int)(widthThis/object.getScale()),(int)(heightThis/object.getScale()))!= 0 ? 1 : 0;
-                        maskObject[widthThis][heightThis][1] = (int)(object.width* object.getScale()) - widthThis+1+ object.x;
-                        maskObject[widthThis][heightThis][2] = heightThis+1 + object.y;
-                    }
-                }
-                } else {
-                    for (int widthThis = 0; widthThis < (int)(object.width * object.getScale()); widthThis++){
-                        for (int heightThis = 0; heightThis < (int)(object.height * object.getScale()); heightThis++){
-                            maskObject[widthThis][heightThis][0] =
-                                    object.getImage().getRGB((int)(widthThis/object.getScale()),(int)(heightThis/object.getScale()))!= 0 ? 1 : 0;
-                            maskObject[widthThis][heightThis][1] = (int)(object.width* object.getScale()) - widthThis+1+ object.x;
-                            maskObject[widthThis][heightThis][2] = (int)(object.height* object.getScale()) - heightThis+1+ object.y;;
-                        }
-                    }
-                }
-            }
-
-
-
-            //the final answer
-            for (int thatWidth = 0; thatWidth < (int)(this.width * getScale()); thatWidth++) {
-                for (int thatHeight = 0; thatHeight < (int)(this.height * getScale()); thatHeight++) {
-
-                    if (maskThis[thatWidth][thatHeight][0] != 0) {
-                        for (int objectThatWidth = 0; objectThatWidth < (int)(object.width * object.getScale()); objectThatWidth++){
-                            for (int objectThatHeight = 0; objectThatHeight < (int)(object.height * object.getScale()); objectThatHeight++) {
-                                if (maskObject[objectThatWidth][objectThatHeight][1] == maskThis[thatWidth][thatHeight][1]
-                                        && maskObject[objectThatWidth][objectThatHeight][2] == maskThis[thatWidth][thatHeight][2]
-                                        && maskObject[objectThatWidth][objectThatHeight][0] != 0
-                                ){
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+    /**
+     * Doesn't work completely fine, mirroring is not working yet
+     */
+    public boolean collidesWith(Sprite other) {
+        //Checks for more performance
+        if (this.isDestroyed() || other.isDestroyed()
+                || !new Rectangle((int) x, (int) y, (int)(width*getScaleX()), (int)(height*getScaleY()))
+                .intersects(new Rectangle((int) other.x, (int) other.y, (int)(other.width*getScaleX()), (int)(other.height*getScaleY())))) {
             return false;
         }
 
+        // Calculate transformation of both Sprites
+        AffineTransform thisTransform = getTransform(this);
+        AffineTransform otherTransform = getTransform(other);
+
+        // spiegeln an der X-Achse (horizontal)
+        //thisTransform.scale(-1, 1); ||
+        //otherTransform.scale(-1, 1);
+        // dann verschieben um -width, damit das Bild wieder "rechts" erscheint
+        //thisTransform.translate(-width, 0);
+        //otherTransform.translate(-width, 0);
+
+        // Calculate Bounding-Boxes in World Coordinates
+        Rectangle thisBounds = getTransformedBounds(this, thisTransform);
+        Rectangle otherBounds = getTransformedBounds(other, otherTransform);
+
+        // Calculate Intersection-Area
+        Rectangle intersection = thisBounds.intersection(otherBounds);
+        if (intersection.isEmpty()) {
+            return false;
+        }
+        // Inverse transformation for Reversing
+        AffineTransform inverseThis, inverseOther;
+        try {
+            inverseThis = thisTransform.createInverse();
+            inverseOther = otherTransform.createInverse();
+        } catch (NoninvertibleTransformException e) {
+            return false;
+        }
+        // Iterate over all Pixels in the Intersection-Area
+        for (int x = intersection.x; x < intersection.x + intersection.width; x++) {
+            for (int y = intersection.y; y < intersection.y + intersection.height; y++) {
+                // Transform World Coordinates in Sprite Coordinates
+                Point2D thisPoint = inverseThis.transform(new Point2D.Double(x, y), null);
+                Point2D otherPoint = inverseOther.transform(new Point2D.Double(x, y), null);
+                if (isSolidPixel(this.image, thisPoint) && isSolidPixel(other.image, otherPoint)) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
-    public BufferedImage getImage(){
+    private AffineTransform getTransform(Sprite sprite) {
+        AffineTransform tx = new AffineTransform();
+        tx.translate(sprite.x, sprite.y);
+        tx.scale(sprite.getScaleX(), sprite.getScaleY());
+        tx.rotate(sprite.getAngleInRadians(), sprite.image.getWidth() / 2.0, sprite.image.getHeight() / 2.0);
+        return tx;
+    }
+
+
+    private Rectangle getTransformedBounds(Sprite sprite, AffineTransform transform) {
+        int w = (int)(sprite.image.getWidth());
+        int h = (int)(sprite.image.getHeight());
+
+        Point2D[] corners = new Point2D[]{
+                new Point2D.Double(0, 0),
+                new Point2D.Double(w, 0),
+                new Point2D.Double(w, h),
+                new Point2D.Double(0, h)
+        };
+
+        double minX = Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE;
+        double maxY = -Double.MAX_VALUE;
+
+        for (Point2D p : corners) {
+            Point2D transformed = transform.transform(p, null);
+            minX = Math.min(minX, transformed.getX());
+            minY = Math.min(minY, transformed.getY());
+            maxX = Math.max(maxX, transformed.getX());
+            maxY = Math.max(maxY, transformed.getY());
+        }
+
+        return new Rectangle(
+                (int) Math.floor(minX),
+                (int) Math.floor(minY),
+                (int) Math.ceil(maxX - minX),
+                (int) Math.ceil(maxY - minY)
+        );
+    }
+
+
+    private boolean isSolidPixel(BufferedImage img, Point2D p) {
+        int x = (int) p.getX();
+        int y = (int) p.getY();
+
+        if (x < 0 || y < 0 || x >= img.getWidth() || y >= img.getHeight()) {
+            return false;
+        }
+
+        int pixel = img.getRGB(x, y);
+        int alpha = (pixel >> 24) & 0xff;
+
+        return alpha > 0;
+    }
+
+
+    public BufferedImage getImage() {
         return this.image;
+    }
+
+    private void moved() {
+        resetCenter();
+    }
+
+    public String getImagePath() {
+        return imagePath;
     }
 }
