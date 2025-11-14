@@ -160,6 +160,44 @@ public abstract class Shape extends Actor {
         angle %= (Math.PI*2);
         calcOutsideView();
     }
+    public double getX(){
+        return x;
+    }
+    public double getY(){
+        return y;
+    }
+    public void rotate(double angleInDeg, double rotationCenterX, double rotationCenterY) {
+        // Aktuelle Position des Shape-Zentrums
+        double currentCenterX = getCenterX();
+        double currentCenterY = getCenterY();
+
+        // Vektor vom Rotationspunkt zum Shape-Zentrum
+        double relX = currentCenterX - rotationCenterX;
+        double relY = currentCenterY - rotationCenterY;
+
+        // Winkel in Radiant umrechnen
+        double angleRad = Math.toRadians(angleInDeg);
+
+        // Rotationsmatrix anwenden
+        double cos = Math.cos(angleRad);
+        double sin = Math.sin(angleRad);
+        double newRelX = relX * cos - relY * sin;
+        double newRelY = relX * sin + relY * cos;
+
+        // Neue Position berechnen (Shape-Zentrum zurück zur oberen linken Ecke)
+        double newCenterX = newRelX + rotationCenterX;
+        double newCenterY = newRelY + rotationCenterY;
+
+        // Shape zur neuen Position bewegen
+        moveTo(newCenterX - (width * getScaleX() / 2.0),
+                newCenterY - (height * getScaleY() / 2.0));
+
+        // Eigenen Winkel des Shapes aktualisieren
+        angle = angle + angleRad;
+        angle %= (Math.PI * 2);
+
+        calcOutsideView();
+    }
     public void rotateInRad(double angleRad) {
         angle = angle + Math.toRadians(angleRad);
         angle %= (Math.PI*2);
